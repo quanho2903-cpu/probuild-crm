@@ -24,7 +24,15 @@ const api = async (url, options = {}) => {
 
 function formatDate(value) {
   if (!value) return "-";
-  return new Date(value).toLocaleString();
+
+  return new Date(value).toLocaleString("en-AU", {
+    timeZone: "Australia/Melbourne",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function initStatusOptions() {
