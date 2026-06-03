@@ -218,6 +218,8 @@ function openModal() {
   });
 
   document.getElementById("status").value = "New Lead";
+  document.getElementById("lastEditedBy").innerText = "-";
+document.getElementById("lastUpdated").innerText = "-";
   document.getElementById("customerModal").classList.remove("hidden");
 }
 
@@ -246,7 +248,8 @@ function editCustomer(id) {
   ].forEach(k => {
     document.getElementById(k).value = c[k] || "";
   });
-
+document.getElementById("lastEditedBy").innerText = c.last_edited_by || "-";
+document.getElementById("lastUpdated").innerText = formatDate(c.last_updated);
   document.getElementById("customerModal").classList.remove("hidden");
 }
 
