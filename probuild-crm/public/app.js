@@ -17,28 +17,42 @@ const api = async (url, options = {}) => {
       ...(options.headers || {})
     }
   });
+
   if (!res.ok) throw new Error("Request failed");
   return res.json();
 };
 
+function formatDate(value) {
+  if (!value) return "-";
+  return new Date(value).toLocaleString();
+}
+
 function initStatusOptions() {
-  document.getElementById("status").innerHTML = statuses.map(s => `<option value="${s}">${s}</option>`).join("");
+  document.getElementById("status").innerHTML = statuses
+    .map(s => `<option value="${s}">${s}</option>`)
+    .join("");
 }
 
 async function login() {
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
+
   const res = await fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
   });
+
   if (!res.ok) return alert("Wrong email or password");
+
   const data = await res.json();
+
   token = data.token;
   currentUser = data.user;
+
   localStorage.setItem("crm_token", token);
   localStorage.setItem("crm_user", JSON.stringify(currentUser));
+
   showApp();
 }
 
@@ -65,7 +79,8 @@ async function loadCustomers() {
 function showSection(id) {
   document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
-  document.getElementById("pageTitle").innerText = id.charAt(0).toUpperCase() + id.slice(1);
+  document.getElementById("pageTitle").innerText =
+    id.charAt(0).toUpperCase() + id.slice(1);
 }
 
 function renderDashboard() {
@@ -82,6 +97,7 @@ function renderDashboard() {
       <div class="card"><h3>Construction</h3><strong>${construction}</strong></div>
       <div class="card"><h3>Completed</h3><strong>${completed}</strong></div>
     </div>
+
     <div class="card">
       <h3>Follow-up Tasks</h3>
       <strong>${followUps}</strong>
@@ -93,20 +109,25 @@ function renderDashboard() {
 function renderPipeline() {
   const html = `<div class="pipeline">` + statuses.map(status => {
     const list = customers.filter(c => c.status === status);
+
     return `
       <div class="column" ondragover="allowDrop(event)" ondrop="dropCustomer(event, '${status}')">
         <h3>${status} (${list.length})</h3>
+
         ${list.map(c => `
           <div class="lead-card" draggable="true" ondragstart="dragCustomer(event, ${c.id})">
             <h4>${c.customer_name}</h4>
             <p>${c.project_type || ""}</p>
             <p><b>Budget:</b> ${c.budget || "-"}</p>
             <p><b>Next:</b> ${c.next_action || "-"}</p>
+            <p><b>Last Edit:</b> ${c.last_edited_by || "-"}</p>
             <button onclick="editCustomer(${c.id})">Open</button>
           </div>
         `).join("")}
-      </div>`;
+      </div>
+    `;
   }).join("") + `</div>`;
+
   document.getElementById("pipeline").innerHTML = html;
 }
 
@@ -135,14 +156,25 @@ async function dropCustomer(event, newStatus) {
 
   await loadCustomers();
 }
+
 function renderCustomers() {
   document.getElementById("customers").innerHTML = `
     <table class="table">
       <thead>
         <tr>
-          <th>Customer</th><th>Phone</th><th>Project</th><th>Budget</th><th>Status</th><th>Assigned</th><th>Next Action</th><th>Actions</th>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>Project</th>
+          <th>Budget</th>
+          <th>Status</th>
+          <th>Assigned</th>
+          <th>Next Action</th>
+          <th>Last Edited By</th>
+          <th>Last Updated</th>
+          <th>Actions</th>
         </tr>
       </thead>
+
       <tbody>
         ${customers.map(c => `
           <tr>
@@ -153,11 +185,14 @@ function renderCustomers() {
             <td><span class="badge">${c.status}</span></td>
             <td>${c.assigned_to || "-"}</td>
             <td>${c.next_action || "-"}</td>
+            <td>${c.last_edited_by || "-"}</td>
+            <td>${formatDate(c.last_updated)}</td>
             <td class="actions">
               <button onclick="editCustomer(${c.id})">Edit</button>
               <button class="delete" onclick="deleteCustomer(${c.id})">Delete</button>
             </td>
-          </tr>`).join("")}
+          </tr>
+        `).join("")}
       </tbody>
     </table>
   `;
@@ -166,7 +201,22 @@ function renderCustomers() {
 function openModal() {
   document.getElementById("modalTitle").innerText = "Add Customer";
   document.getElementById("customerId").value = "";
-  ["customer_name","phone","email","project_address","project_type","budget","assigned_to","next_action","due_date","notes"].forEach(id => document.getElementById(id).value = "");
+
+  [
+    "customer_name",
+    "phone",
+    "email",
+    "project_address",
+    "project_type",
+    "budget",
+    "assigned_to",
+    "next_action",
+    "due_date",
+    "notes"
+  ].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+
   document.getElementById("status").value = "New Lead";
   document.getElementById("customerModal").classList.remove("hidden");
 }
@@ -177,35 +227,79 @@ function closeModal() {
 
 function editCustomer(id) {
   const c = customers.find(x => x.id === id);
+
   document.getElementById("modalTitle").innerText = "Edit Customer";
   document.getElementById("customerId").value = c.id;
-  ["customer_name","phone","email","project_address","project_type","budget","status","assigned_to","next_action","due_date","notes"].forEach(k => {
+
+  [
+    "customer_name",
+    "phone",
+    "email",
+    "project_address",
+    "project_type",
+    "budget",
+    "status",
+    "assigned_to",
+    "next_action",
+    "due_date",
+    "notes"
+  ].forEach(k => {
     document.getElementById(k).value = c[k] || "";
   });
+
   document.getElementById("customerModal").classList.remove("hidden");
 }
 
 async function saveCustomer() {
   const id = document.getElementById("customerId").value;
   const data = {};
-  ["customer_name","phone","email","project_address","project_type","budget","status","assigned_to","next_action","due_date","notes"].forEach(k => {
+
+  [
+    "customer_name",
+    "phone",
+    "email",
+    "project_address",
+    "project_type",
+    "budget",
+    "status",
+    "assigned_to",
+    "next_action",
+    "due_date",
+    "notes"
+  ].forEach(k => {
     data[k] = document.getElementById(k).value;
   });
+
   if (!data.customer_name) return alert("Customer name is required");
+
   if (id) {
-    await api("/api/customers/" + id, { method: "PUT", body: JSON.stringify(data) });
+    await api("/api/customers/" + id, {
+      method: "PUT",
+      body: JSON.stringify(data)
+    });
   } else {
-    await api("/api/customers", { method: "POST", body: JSON.stringify(data) });
+    await api("/api/customers", {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
   }
+
   closeModal();
   loadCustomers();
 }
 
 async function deleteCustomer(id) {
   if (!confirm("Delete this customer?")) return;
-  await api("/api/customers/" + id, { method: "DELETE" });
+
+  await api("/api/customers/" + id, {
+    method: "DELETE"
+  });
+
   loadCustomers();
 }
 
 initStatusOptions();
-if (token && currentUser) showApp();
+
+if (token && currentUser) {
+  showApp();
+}
