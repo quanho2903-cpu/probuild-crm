@@ -25,21 +25,17 @@ const api = async (url, options = {}) => {
 function formatDate(value) {
   if (!value) return "-";
 
-  try {
-    return new Date(value).toLocaleString("en-AU", {
-      timeZone: "Australia/Melbourne",
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true
-    });
-  } catch {
-    return value;
-  }
-}
+  const utcDate = new Date(value.replace(" ", "T") + "Z");
+
+  return utcDate.toLocaleString("en-AU", {
+    timeZone: "Australia/Melbourne",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  });
 }
 function initStatusOptions() {
   document.getElementById("status").innerHTML = statuses
