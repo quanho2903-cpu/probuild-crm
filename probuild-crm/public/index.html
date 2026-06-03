@@ -3,22 +3,16 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Probuild CRM</title>
+  <title>ProBuild CRM</title>
+  <link rel="icon" type="image/png" href="logo.png"/>
   <link rel="stylesheet" href="style.css"/>
-<head>
-    <meta charset="UTF-8">
-
-    <title>ProBuild CRM</title>
-
-    <link rel="icon" type="image/png" href="logo.png">
-
-    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <div id="loginPage" class="login-page">
     <div class="login-card">
- <h1>ProBuild CRM</h1>
-     <p>Construction Project & Customer Management Platform</p>
+      <h1>ProBuild CRM</h1>
+      <p>Construction Project & Customer Management Platform</p>
       <input id="loginEmail" placeholder="Email" value="admin@company.com"/>
       <input id="loginPassword" placeholder="Password" type="password" value="admin123"/>
       <button onclick="login()">Login</button>
@@ -28,10 +22,11 @@
 
   <div id="appPage" class="app hidden">
     <aside class="sidebar">
-   <div class="logo">
-  <img src="logo.png" alt="ProBuild CRM">
-  <span>ProBuild CRM</span>
-</div>
+      <div class="logo">
+        <img src="logo.png" alt="ProBuild CRM">
+        <span>ProBuild CRM</span>
+      </div>
+
       <button onclick="showSection('dashboard')">Dashboard</button>
       <button onclick="showSection('pipeline')">Pipeline</button>
       <button onclick="showSection('customers')">Customers</button>
@@ -59,7 +54,9 @@
         <h2 id="modalTitle">Add Customer</h2>
         <button onclick="closeModal()">×</button>
       </div>
+
       <input type="hidden" id="customerId"/>
+
       <div class="form-grid">
         <input id="customer_name" placeholder="Customer Name"/>
         <input id="phone" placeholder="Phone"/>
@@ -73,6 +70,7 @@
         <input id="due_date" type="date"/>
         <textarea id="notes" placeholder="Notes"></textarea>
       </div>
+
       <button onclick="saveCustomer()">Save</button>
     </div>
   </div>
