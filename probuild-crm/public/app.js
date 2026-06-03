@@ -25,16 +25,22 @@ const api = async (url, options = {}) => {
 function formatDate(value) {
   if (!value) return "-";
 
-  return new Date(value).toLocaleString("en-AU", {
+  let dateValue = value;
+
+  if (typeof value === "string" && value.includes(" ") && !value.includes("T")) {
+    dateValue = value.replace(" ", "T") + "Z";
+  }
+
+  return new Date(dateValue).toLocaleString("en-AU", {
     timeZone: "Australia/Melbourne",
     day: "2-digit",
     month: "short",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    hour12: true
   });
 }
-
 function initStatusOptions() {
   document.getElementById("status").innerHTML = statuses
     .map(s => `<option value="${s}">${s}</option>`)
