@@ -23,6 +23,8 @@ const api = async (url, options = {}) => {
 };
 
 function formatDate(value) {
+  console.log("LAST UPDATED =", value);
+
   if (!value) return "-";
 
   const utcDate = new Date(value.replace(" ", "T") + "Z");
