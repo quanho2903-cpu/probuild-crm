@@ -50,13 +50,27 @@ db.serialize(() => {
     FOREIGN KEY(customer_id) REFERENCES customers(id)
   )`);
 
-  db.get("SELECT COUNT(*) AS count FROM users", [], (err, row) => {
-    if (!err && row.count === 0) {
-      const hash = bcrypt.hashSync("admin123", 10);
-      db.run("INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)",
-        ["Admin User", "admin@company.com", hash, "admin"]);
-    }
-  });
+db.get("SELECT COUNT(*) AS count FROM users", [], (err, row) => {
+  if (!err && row.count === 0) {
+
+    const users = [
+      ["Quan", "quan@probuild.com", "quan123", "admin"],
+      ["Kien", "kien@probuild.com", "kien123", "staff"],
+      ["Tuan", "tuan@probuild.com", "tuan123", "staff"],
+      ["Dung", "dung@probuild.com", "dung123", "staff"],
+      ["Bao", "bao@probuild.com", "bao123", "staff"]
+    ];
+
+    users.forEach(user => {
+      const hash = bcrypt.hashSync(user[2], 10);
+
+      db.run(
+        "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)",
+        [user[0], user[1], hash, user[3]]
+      );
+    });
+  }
+});
 
   db.get("SELECT COUNT(*) AS count FROM customers", [], (err, row) => {
     if (!err && row.count === 0) {
