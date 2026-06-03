@@ -94,10 +94,10 @@ function renderPipeline() {
   const html = `<div class="pipeline">` + statuses.map(status => {
     const list = customers.filter(c => c.status === status);
     return `
-      <div class="column">
+      <div class="column" ondragover="allowDrop(event)" ondrop="dropCustomer(event, '${status}')">
         <h3>${status} (${list.length})</h3>
         ${list.map(c => `
-          <div class="lead-card">
+          <div class="lead-card" draggable="true" ondragstart="dragCustomer(event, ${c.id})">
             <h4>${c.customer_name}</h4>
             <p>${c.project_type || ""}</p>
             <p><b>Budget:</b> ${c.budget || "-"}</p>
@@ -110,6 +110,31 @@ function renderPipeline() {
   document.getElementById("pipeline").innerHTML = html;
 }
 
+function dragCustomer(event, customerId) {
+  event.dataTransfer.setData("customerId", customerId);
+}
+
+function allowDrop(event) {
+  event.preventDefault();
+}
+
+async function dropCustomer(event, newStatus) {
+  event.preventDefault();
+
+  const customerId = event.dataTransfer.getData("customerId");
+  const customer = customers.find(c => c.id == customerId);
+
+  if (!customer) return;
+
+  customer.status = newStatus;
+
+  await api("/api/customers/" + customerId, {
+    method: "PUT",
+    body: JSON.stringify(customer)
+  });
+
+  await loadCustomers();
+}
 function renderCustomers() {
   document.getElementById("customers").innerHTML = `
     <table class="table">
