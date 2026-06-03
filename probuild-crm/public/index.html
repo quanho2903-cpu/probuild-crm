@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Construction CRM</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div id="loginPage" class="login-page">
+    <div class="login-card">
+      <h1>Construction CRM</h1>
+      <p>Company customer & project tracking system</p>
+      <input id="loginEmail" placeholder="Email" value="admin@company.com"/>
+      <input id="loginPassword" placeholder="Password" type="password" value="admin123"/>
+      <button onclick="login()">Login</button>
+      <small>Demo login: admin@company.com / admin123</small>
+    </div>
+  </div>
+
+  <div id="appPage" class="app hidden">
+    <aside class="sidebar">
+      <h2>BuildCRM</h2>
+      <button onclick="showSection('dashboard')">Dashboard</button>
+      <button onclick="showSection('pipeline')">Pipeline</button>
+      <button onclick="showSection('customers')">Customers</button>
+      <button onclick="openModal()">+ Add Customer</button>
+      <button onclick="logout()" class="logout">Logout</button>
+    </aside>
+
+    <main>
+      <header>
+        <div>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="userInfo"></p>
+        </div>
+      </header>
+
+      <section id="dashboard" class="section"></section>
+      <section id="pipeline" class="section hidden"></section>
+      <section id="customers" class="section hidden"></section>
+    </main>
+  </div>
+
+  <div id="customerModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Customer</h2>
+        <button onclick="closeModal()">×</button>
+      </div>
+      <input type="hidden" id="customerId"/>
+      <div class="form-grid">
+        <input id="customer_name" placeholder="Customer Name"/>
+        <input id="phone" placeholder="Phone"/>
+        <input id="email" placeholder="Email"/>
+        <input id="project_address" placeholder="Project Address"/>
+        <input id="project_type" placeholder="Project Type"/>
+        <input id="budget" placeholder="Budget"/>
+        <select id="status"></select>
+        <input id="assigned_to" placeholder="Assigned To"/>
+        <input id="next_action" placeholder="Next Action"/>
+        <input id="due_date" type="date"/>
+        <textarea id="notes" placeholder="Notes"></textarea>
+      </div>
+      <button onclick="saveCustomer()">Save</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
