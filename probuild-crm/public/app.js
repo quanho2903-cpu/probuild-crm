@@ -23,19 +23,18 @@ const api = async (url, options = {}) => {
 };
 
 function formatDate(value) {
-  console.log("LAST UPDATED =", value);
-
   if (!value) return "-";
 
-  const utcDate = new Date(value.replace(" ", "T") + "Z");
+  const date = new Date(value);
 
-  return utcDate.toLocaleString("en-AU", {
+  return date.toLocaleString("en-AU", {
     timeZone: "Australia/Melbourne",
     day: "2-digit",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
     hour12: true
   });
 }
