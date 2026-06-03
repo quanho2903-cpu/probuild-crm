@@ -23,11 +23,23 @@ const api = async (url, options = {}) => {
 };
 
 function formatDate(value) {
-  console.log("DATE VALUE =", value);
-
   if (!value) return "-";
 
-  return value;
+  try {
+    return new Date(value).toLocaleString("en-AU", {
+      timeZone: "Australia/Melbourne",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    });
+  } catch {
+    return value;
+  }
+}
 }
 function initStatusOptions() {
   document.getElementById("status").innerHTML = statuses
