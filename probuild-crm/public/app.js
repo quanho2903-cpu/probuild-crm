@@ -119,34 +119,37 @@ function renderPipeline() {
     const list = customers.filter(c => c.status === status);
 
     return `
-  <div class="column" ondragover="allowDrop(event)" ondrop="dropCustomer(event, '${status}')">
-    <h3>${status} (${list.length})</h3>
+      <div class="column" ondragover="allowDrop(event)" ondrop="dropCustomer(event, '${status}')">
+        <h3>${status} (${list.length})</h3>
 
-    ${list.map(c => `
-      <div class="lead-card" draggable="true" ondragstart="dragCustomer(event, ${c.id})">
-        <h4>${c.customer_name}</h4>
+        ${list.map(c => `
+          <div class="lead-card" draggable="true" ondragstart="dragCustomer(event, ${c.id})">
+            <h4>${c.customer_name}</h4>
 
-        <p>${c.project_type || "-"}</p>
+            <p>${c.project_type || "-"}</p>
 
-        <p><b>Budget:</b> ${c.budget || "-"}</p>
+            <p><b>Budget:</b> ${c.budget || "-"}</p>
 
-        <p><b>Assigned:</b> ${c.assigned_to || "-"}</p>
+            <p><b>Assigned:</b> ${c.assigned_to || "-"}</p>
 
-        <p><b>Next:</b> ${c.next_action || "-"}</p>
+            <p><b>Created By:</b> ${c.created_by || "-"}</p>
 
-        <p><b>Last Edited By:</b> ${c.last_edited_by || "-"}</p>
+            <p><b>Next:</b> ${c.next_action || "-"}</p>
 
-        <p><b>Last Updated:</b> ${formatDate(c.last_updated)}</p>
+            <p><b>Last Edited By:</b> ${c.last_edited_by || "-"}</p>
 
-        <button onclick="editCustomer(${c.id})">Open</button>
+            <p><b>Last Updated:</b> ${formatDate(c.last_updated)}</p>
+
+            <button onclick="editCustomer(${c.id})">Open</button>
+          </div>
+        `).join("")}
       </div>
-    `).join("")}
-  </div>
-`;
-}).join("") + `</div>`;
+    `;
+  }).join("") + `</div>`;
 
-document.getElementById("pipeline").innerHTML = html;
+  document.getElementById("pipeline").innerHTML = html;
 }
+
 function dragCustomer(event, customerId) {
   event.dataTransfer.setData("customerId", customerId);
 }
@@ -184,6 +187,7 @@ function renderCustomers() {
           <th>Budget</th>
           <th>Status</th>
           <th>Assigned</th>
+          <th>Created By</th>
           <th>Next Action</th>
           <th>Last Edited By</th>
           <th>Last Updated</th>
@@ -200,6 +204,7 @@ function renderCustomers() {
             <td>${c.budget || "-"}</td>
             <td><span class="badge">${c.status}</span></td>
             <td>${c.assigned_to || "-"}</td>
+            <td>${c.created_by || "-"}</td>
             <td>${c.next_action || "-"}</td>
             <td>${c.last_edited_by || "-"}</td>
             <td>${formatDate(c.last_updated)}</td>
@@ -234,8 +239,11 @@ function openModal() {
   });
 
   document.getElementById("status").value = "New Lead";
+
+  document.getElementById("createdBy").innerText = "-";
   document.getElementById("lastEditedBy").innerText = "-";
-document.getElementById("lastUpdated").innerText = "-";
+  document.getElementById("lastUpdated").innerText = "-";
+
   document.getElementById("customerModal").classList.remove("hidden");
 }
 
@@ -264,8 +272,11 @@ function editCustomer(id) {
   ].forEach(k => {
     document.getElementById(k).value = c[k] || "";
   });
-document.getElementById("lastEditedBy").innerText = c.last_edited_by || "-";
-document.getElementById("lastUpdated").innerText = formatDate(c.last_updated);
+
+  document.getElementById("createdBy").innerText = c.created_by || "-";
+  document.getElementById("lastEditedBy").innerText = c.last_edited_by || "-";
+  document.getElementById("lastUpdated").innerText = formatDate(c.last_updated);
+
   document.getElementById("customerModal").classList.remove("hidden");
 }
 
