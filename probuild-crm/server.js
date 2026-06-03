@@ -17,8 +17,9 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
+
 function getMelbourneTime() {
-  return new Intl.DateTimeFormat("en-AU", {
+  return new Date().toLocaleString("en-AU", {
     timeZone: "Australia/Melbourne",
     day: "2-digit",
     month: "short",
@@ -27,8 +28,9 @@ function getMelbourneTime() {
     minute: "2-digit",
     second: "2-digit",
     hour12: true
-  }).format(new Date());
+  });
 }
+
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -57,8 +59,8 @@ async function initDB() {
       notes TEXT,
       last_edited_by TEXT,
       last_updated TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      created_at TEXT,
+      updated_at TEXT
     );
   `);
 
@@ -82,10 +84,15 @@ async function initDB() {
 
   for (const user of companyUsers) {
     const [name, email, password, role] = user;
-    const existing = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+
+    const existing = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
 
     if (existing.rows.length === 0) {
       const hash = bcrypt.hashSync(password, 10);
+
       await pool.query(
         "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)",
         [name, email, hash, role]
@@ -102,7 +109,9 @@ function auth(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.replace("Bearer ", "");
 
-  if (!token) return res.status(401).json({ error: "No token" });
+  if (!token) {
+    return res.status(401).json({ error: "No token" });
+  }
 
   try {
     req.user = jwt.verify(token, JWT_SECRET);
@@ -116,10 +125,16 @@ app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    const result = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+
     const user = result.rows[0];
 
-    if (!user) return res.status(401).json({ error: "Invalid login" });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid login" });
+    }
 
     if (!bcrypt.compareSync(password, user.password_hash)) {
       return res.status(401).json({ error: "Invalid login" });
@@ -145,15 +160,20 @@ app.post("/api/login", async (req, res) => {
       }
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Login server error" });
   }
 });
 
 app.get("/api/customers", auth, async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM customers ORDER BY updated_at DESC");
+    const result = await pool.query(
+      "SELECT * FROM customers ORDER BY id DESC"
+    );
+
     res.json(result.rows);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -164,9 +184,27 @@ app.post("/api/customers", auth, async (req, res) => {
     const now = getMelbourneTime();
 
     const result = await pool.query(
-      `INSERT INTO customers 
-      (customer_name, phone, email, project_address, project_type, budget, status, assigned_to, created_by, next_action, due_date, notes, last_edited_by, last_updated, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_TIMESTAMP)
+      `INSERT INTO customers
+      (
+        customer_name,
+        phone,
+        email,
+        project_address,
+        project_type,
+        budget,
+        status,
+        assigned_to,
+        created_by,
+        next_action,
+        due_date,
+        notes,
+        last_edited_by,
+        last_updated,
+        created_at,
+        updated_at
+      )
+      VALUES
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       RETURNING id`,
       [
         c.customer_name,
@@ -182,13 +220,22 @@ app.post("/api/customers", auth, async (req, res) => {
         c.due_date,
         c.notes,
         req.user.name,
+        now,
+        now,
         now
       ]
     );
 
     await pool.query(
-      "INSERT INTO activities (customer_id, action, created_by, created_at) VALUES ($1, $2, $3, $4)",
-      [result.rows[0].id, `Customer created at status: ${c.status}`, req.user.name, now]
+      `INSERT INTO activities
+      (customer_id, action, created_by, created_at)
+      VALUES ($1, $2, $3, $4)`,
+      [
+        result.rows[0].id,
+        `Customer created at status: ${c.status}`,
+        req.user.name,
+        now
+      ]
     );
 
     res.json({ id: result.rows[0].id });
@@ -218,8 +265,8 @@ app.put("/api/customers/:id", auth, async (req, res) => {
         notes=$11,
         last_edited_by=$12,
         last_updated=$13,
-        updated_at=CURRENT_TIMESTAMP
-      WHERE id=$14`,
+        updated_at=$14
+      WHERE id=$15`,
       [
         c.customer_name,
         c.phone,
@@ -234,13 +281,21 @@ app.put("/api/customers/:id", auth, async (req, res) => {
         c.notes,
         req.user.name,
         now,
+        now,
         req.params.id
       ]
     );
 
     await pool.query(
-      "INSERT INTO activities (customer_id, action, created_by, created_at) VALUES ($1, $2, $3, $4)",
-      [req.params.id, `Customer updated. Current status: ${c.status}`, req.user.name, now]
+      `INSERT INTO activities
+      (customer_id, action, created_by, created_at)
+      VALUES ($1, $2, $3, $4)`,
+      [
+        req.params.id,
+        `Customer updated. Current status: ${c.status}`,
+        req.user.name,
+        now
+      ]
     );
 
     res.json({ success: true });
@@ -255,6 +310,7 @@ app.delete("/api/customers/:id", auth, async (req, res) => {
     await pool.query("DELETE FROM customers WHERE id = $1", [req.params.id]);
     res.json({ success: true });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Could not delete customer" });
   }
 });
@@ -268,6 +324,7 @@ app.get("/api/customers/:id/activities", auth, async (req, res) => {
 
     res.json(result.rows);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Database error" });
   }
 });
