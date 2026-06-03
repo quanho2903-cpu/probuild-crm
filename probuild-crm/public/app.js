@@ -111,26 +111,34 @@ function renderPipeline() {
     const list = customers.filter(c => c.status === status);
 
     return `
-      <div class="column" ondragover="allowDrop(event)" ondrop="dropCustomer(event, '${status}')">
-        <h3>${status} (${list.length})</h3>
+  <div class="column" ondragover="allowDrop(event)" ondrop="dropCustomer(event, '${status}')">
+    <h3>${status} (${list.length})</h3>
 
-        ${list.map(c => `
-          <div class="lead-card" draggable="true" ondragstart="dragCustomer(event, ${c.id})">
-            <h4>${c.customer_name}</h4>
-            <p>${c.project_type || ""}</p>
-            <p><b>Budget:</b> ${c.budget || "-"}</p>
-            <p><b>Next:</b> ${c.next_action || "-"}</p>
-            <p><b>Last Edit:</b> ${c.last_edited_by || "-"}</p>
-            <button onclick="editCustomer(${c.id})">Open</button>
-          </div>
-        `).join("")}
+    ${list.map(c => `
+      <div class="lead-card" draggable="true" ondragstart="dragCustomer(event, ${c.id})">
+        <h4>${c.customer_name}</h4>
+
+        <p>${c.project_type || "-"}</p>
+
+        <p><b>Budget:</b> ${c.budget || "-"}</p>
+
+        <p><b>Assigned:</b> ${c.assigned_to || "-"}</p>
+
+        <p><b>Next:</b> ${c.next_action || "-"}</p>
+
+        <p><b>Last Edited By:</b> ${c.last_edited_by || "-"}</p>
+
+        <p><b>Last Updated:</b> ${formatDate(c.last_updated)}</p>
+
+        <button onclick="editCustomer(${c.id})">Open</button>
       </div>
-    `;
-  }).join("") + `</div>`;
+    `).join("")}
+  </div>
+`;
+}).join("") + `</div>`;
 
-  document.getElementById("pipeline").innerHTML = html;
+document.getElementById("pipeline").innerHTML = html;
 }
-
 function dragCustomer(event, customerId) {
   event.dataTransfer.setData("customerId", customerId);
 }
