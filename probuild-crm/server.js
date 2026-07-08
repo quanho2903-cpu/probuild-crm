@@ -331,8 +331,19 @@ app.get("/api/customers/:id/activities", auth, async (req, res) => {
 
 app.get("/reset-users-now", async (req, res) => {
   try {
-    await seedUsers();
-    res.send("Users reset successfully");
+    await pool.query("DELETE FROM users");
+
+for (const user of companyUsers) {
+  const [name, email, password, role] = user;
+  const hash = bcrypt.hashSync(password, 10);
+
+  await pool.query(
+    "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)",
+    [name, email, hash, role]
+  );
+}
+
+res.send("Users reset successfully");
   } catch (err) {
     console.error(err);
     res.status(500).send("Reset failed");
