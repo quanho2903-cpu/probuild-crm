@@ -75,8 +75,8 @@ async function initDB() {
   `);
 
   const companyUsers = [
-    ["Quan", "quan@probuild.com", "quan2903", "admin"],
-    ["Kien", "kien@probuild.com", "kien123", "sales"],
+    ["Quan", "quan@probuild.com", "quan29032006", "admin"],
+    ["Kien", "kien@probuild.com", "kien12345", "sales"],
     ["Tuan", "tuan@probuild.com", "tuan123", "sales"],
     ["Dung", "dung@probuild.com", "dung123", "project_manager"],
     ["Bao", "bao@probuild.com", "bao123", "site_supervisor"]
