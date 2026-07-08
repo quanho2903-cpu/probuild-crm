@@ -326,7 +326,34 @@ app.get("/api/customers/:id/activities", auth, async (req, res) => {
     res.status(500).json({ error: "Database error" });
   }
 });
+app.get("/reset-users-now", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM users");
 
+    const companyUsers = [
+      ["Quan", "quan@probuild.com", "quan29032006", "admin"],
+      ["Kien", "kien@probuild.com", "kien123", "sales"],
+      ["Tuan", "tuan@probuild.com", "tuan123", "sales"],
+      ["Dung", "dung@probuild.com", "dung123", "project_manager"],
+      ["Bao", "bao@probuild.com", "bao123", "site_supervisor"]
+    ];
+
+    for (const user of companyUsers) {
+      const [name, email, password, role] = user;
+      const hash = bcrypt.hashSync(password, 10);
+
+      await pool.query(
+        "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)",
+        [name, email, hash, role]
+      );
+    }
+
+    res.send("Users reset successfully");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Reset failed");
+  }
+});
 app.listen(PORT, () => {
   console.log(`ProBuild CRM running on port ${PORT}`);
 });
