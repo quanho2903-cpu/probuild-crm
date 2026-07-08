@@ -31,6 +31,32 @@ function getMelbourneTime() {
   });
 }
 
+const companyUsers = [
+  ["Quan", "quan@probuild.com", "quan29032006", "admin"],
+  ["Kien", "kien@probuild.com", "kien123", "sales"],
+  ["Tuan", "tuan@probuild.com", "tuan123", "sales"],
+  ["Dung", "dung@probuild.com", "dung123", "project_manager"],
+  ["Bao", "bao@probuild.com", "bao123", "site_supervisor"]
+];
+
+async function seedUsers() {
+  for (const user of companyUsers) {
+    const [name, email, password, role] = user;
+    const hash = bcrypt.hashSync(password, 10);
+
+    await pool.query(
+      `INSERT INTO users (name, email, password_hash, role)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (email)
+       DO UPDATE SET
+         name = EXCLUDED.name,
+         password_hash = EXCLUDED.password_hash,
+         role = EXCLUDED.role`,
+      [name, email, hash, role]
+    );
+  }
+}
+
 async function initDB() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -74,29 +100,7 @@ async function initDB() {
     );
   `);
 
-  const companyUsers = [
-    ["Quan", "quan@probuild.com", "quan29032006", "admin"],
-    ["Kien", "kien@probuild.com", "kien12345", "sales"],
-    ["Tuan", "tuan@probuild.com", "tuan123", "sales"],
-    ["Dung", "dung@probuild.com", "dung123", "project_manager"],
-    ["Bao", "bao@probuild.com", "bao123", "site_supervisor"]
-  ];
-
-  for (const user of companyUsers) {
-  const [name, email, password, role] = user;
-
-  const hash = bcrypt.hashSync(password, 10);
-
-  await pool.query(
-    `INSERT INTO users (name, email, password_hash, role)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (email)
-     DO UPDATE SET
-       name = EXCLUDED.name,
-       password_hash = EXCLUDED.password_hash,
-       role = EXCLUDED.role`,
-    [name, email, hash, role]
-  );
+  await seedUsers();
 }
 
 initDB().catch(err => {
@@ -107,9 +111,7 @@ function auth(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.replace("Bearer ", "");
 
-  if (!token) {
-    return res.status(401).json({ error: "No token" });
-  }
+  if (!token) return res.status(401).json({ error: "No token" });
 
   try {
     req.user = jwt.verify(token, JWT_SECRET);
@@ -121,10 +123,11 @@ function auth(req, res, next) {
 
 app.post("/api/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = (req.body.email || "").trim().toLowerCase();
+    const password = (req.body.password || "").trim();
 
     const result = await pool.query(
-      "SELECT * FROM users WHERE email = $1",
+      "SELECT * FROM users WHERE LOWER(email) = $1",
       [email]
     );
 
@@ -134,7 +137,9 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid login" });
     }
 
-    if (!bcrypt.compareSync(password, user.password_hash)) {
+    const validPassword = bcrypt.compareSync(password, user.password_hash);
+
+    if (!validPassword) {
       return res.status(401).json({ error: "Invalid login" });
     }
 
@@ -158,17 +163,14 @@ app.post("/api/login", async (req, res) => {
       }
     });
   } catch (err) {
-    console.error(err);
+    console.error("LOGIN ERROR:", err);
     res.status(500).json({ error: "Login server error" });
   }
 });
 
 app.get("/api/customers", auth, async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM customers ORDER BY id DESC"
-    );
-
+    const result = await pool.query("SELECT * FROM customers ORDER BY id DESC");
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -326,34 +328,17 @@ app.get("/api/customers/:id/activities", auth, async (req, res) => {
     res.status(500).json({ error: "Database error" });
   }
 });
+
 app.get("/reset-users-now", async (req, res) => {
   try {
-    await pool.query("DELETE FROM users");
-
-    const companyUsers = [
-      ["Quan", "quan@probuild.com", "quan29032006", "admin"],
-      ["Kien", "kien@probuild.com", "kien123", "sales"],
-      ["Tuan", "tuan@probuild.com", "tuan123", "sales"],
-      ["Dung", "dung@probuild.com", "dung123", "project_manager"],
-      ["Bao", "bao@probuild.com", "bao123", "site_supervisor"]
-    ];
-
-    for (const user of companyUsers) {
-      const [name, email, password, role] = user;
-      const hash = bcrypt.hashSync(password, 10);
-
-      await pool.query(
-        "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)",
-        [name, email, hash, role]
-      );
-    }
-
+    await seedUsers();
     res.send("Users reset successfully");
   } catch (err) {
     console.error(err);
     res.status(500).send("Reset failed");
   }
 });
+
 app.listen(PORT, () => {
   console.log(`ProBuild CRM running on port ${PORT}`);
 });
