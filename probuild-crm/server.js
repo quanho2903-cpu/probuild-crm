@@ -90,14 +90,18 @@ async function initDB() {
       [email]
     );
 
-    if (existing.rows.length === 0) {
-      const hash = bcrypt.hashSync(password, 10);
+ const hash = bcrypt.hashSync(password, 10);
 
-      await pool.query(
-        "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)",
-        [name, email, hash, role]
-      );
-    }
+await pool.query(
+  `INSERT INTO users (name, email, password_hash, role)
+   VALUES ($1, $2, $3, $4)
+   ON CONFLICT (email)
+   DO UPDATE SET
+     name = EXCLUDED.name,
+     password_hash = EXCLUDED.password_hash,
+     role = EXCLUDED.role`,
+  [name, email, hash, role]
+);
   }
 }
 
